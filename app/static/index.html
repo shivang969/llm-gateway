@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXUS LLM Gateway | Enterprise Control Plane & Router</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Ambient background glow elements -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <div class="app-layout">
+    <!-- Top Header & Navigation -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="brand-logo">
+          <div class="logo-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <div class="brand-title-wrap">
+              <h1 class="brand-name">NEXUS<span>GATEWAY</span></h1>
+              <span class="badge badge-prod">v1.0.0 PROD</span>
+            </div>
+            <p class="brand-sub">Enterprise LLM Reverse-Proxy • Fallback Routing • Telemetry • Rate Limiting</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="status-pill" id="system-status-pill">
+          <span class="pulse-dot"></span>
+          <span class="status-label" id="status-label">Gateway Operational</span>
+          <span class="latency-badge" id="header-latency">-- ms</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Team Selector -->
+        <div class="team-selector-wrap">
+          <label for="team-select" class="selector-label">Auth Context:</label>
+          <select id="team-select" class="glass-select">
+            <option value="team-alpha-key" selected>Alpha Tier (Strict: 150 TPM, $1.00)</option>
+            <option value="team-beta-key">Beta Tier (Enterprise: 50k TPM, $50.00)</option>
+            <option value="custom">Custom API Key...</option>
+          </select>
+        </div>
+
+        <!-- Quick Demo Presentation Actions -->
+        <div class="quick-actions">
+          <button id="btn-seed-demo" class="btn btn-outline btn-sm" title="Seed realistic presentation data for CV showcase">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Seed Demo Data
+          </button>
+          <button id="btn-refresh-all" class="btn btn-icon btn-sm" title="Refresh Live State">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs-bar">
+      <div class="tabs-container">
+        <button class="nav-tab active" data-tab="playground">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span>Live Playground</span>
+        </button>
+        <button class="nav-tab" data-tab="topology">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span>Routing Topology & Failover</span>
+          <span class="tab-indicator-badge">Live Map</span>
+        </button>
+        <button class="nav-tab" data-tab="telemetry">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Telemetry & Analytics</span>
+        </button>
+        <button class="nav-tab" data-tab="logs">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Audit Logs & Traces</span>
+          <span class="tab-badge" id="logs-count-badge">0</span>
+        </button>
+        <button class="nav-tab" data-tab="quotas">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Quotas & Rate Limiter</span>
+        </button>
+        <button class="nav-tab" data-tab="integration">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>API & cURL Studio</span>
+        </button>
+      </div>
+
+      <!-- Live Auto Refresh Toggle -->
+      <div class="tabs-extra">
+        <label class="toggle-pill" title="Toggle automatic 3s polling of gateway statistics">
+          <input type="checkbox" id="auto-refresh-toggle" checked>
+          <span class="toggle-track"></span>
+          <span class="toggle-text">Auto-Sync (3s)</span>
+        </label>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+      <!-- =============================================================== -->
+      <!-- TAB 1: LIVE PLAYGROUND -->
+      <!-- =============================================================== -->
+      <section id="tab-playground" class="tab-panel active">
+        <div class="playground-grid">
+          <!-- Left Column: Parameters & Prompts -->
+          <div class="playground-sidebar glass-panel">
+            <div class="panel-header">
+              <h2 class="panel-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                Execution Config
+              </h2>
+              <span class="badge badge-info">OpenAI /v1</span>
+            </div>
+
+            <!-- Model Selection -->
+            <div class="form-group">
+              <label for="model-select" class="form-label">
+                <span>Target Model / Route</span>
+                <span class="info-tooltip" title="Models route to Groq LPU by default. Fallback triggers automatically on outage.">ℹ️</span>
+              </label>
+              <select id="model-select" class="glass-select">
+                <option value="qwen/qwen3.8-27b" selected>🚀 qwen/qwen3.8-27b (Groq LPU - Recommended Direct)</option>
+                <option value="openai/gpt-oss-20b">⚡ openai/gpt-oss-20b (Groq LPU - Ultra Fast)</option>
+                <option value="meta-llama/llama-3-8b-instruct:free">🌐 meta-llama/llama-3-8b-instruct:free (OpenRouter)</option>
+                <option value="fail-test-model">⚠️ fail-test-model (Simulate Outage & Auto-Failover)</option>
+              </select>
+            </div>
+
+            <!-- Custom Model Input Toggle -->
+            <div class="form-group custom-model-group hidden" id="custom-model-box">
+              <label for="custom-model-input" class="form-label">Custom Model Identifier</label>
+              <input type="text" id="custom-model-input" class="glass-input" placeholder="e.g. meta-llama/llama-3-70b-instruct">
+            </div>
+
+            <!-- Presets / Quick Demo Scenarios -->
+            <div class="form-group">
+              <label class="form-label">Quick CV Demo Presets</label>
+              <div class="presets-grid">
+                <button type="button" class="btn btn-preset" data-preset="fast-ping">
+                  <span class="preset-icon">⚡</span>
+                  <span class="preset-title">Sub-Second Ping</span>
+                </button>
+                <button type="button" class="btn btn-preset preset-failover" data-preset="failover">
+                  <span class="preset-icon">🛡️</span>
+                  <span class="preset-title">Simulate Failover</span>
+                </button>
+                <button type="button" class="btn btn-preset" data-preset="explain-gateway">
+                  <span class="preset-icon">💡</span>
+                  <span class="preset-title">Architecture Pitch</span>
+                </button>
+                <button type="button" class="btn btn-preset" data-preset="heavy-code">
+                  <span class="preset-icon">💻</span>
+                  <span class="preset-title">Python Function</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Sliders: Temperature & Tokens -->
+            <div class="form-group">
+              <div class="slider-header">
+                <label for="temp-slider" class="form-label">Temperature</label>
+                <span class="slider-val" id="temp-val">0.7</span>
+              </div>
+              <input type="range" id="temp-slider" min="0.0" max="1.5" step="0.1" value="0.7" class="glass-slider">
+            </div>
+
+            <div class="form-group">
+              <div class="slider-header">
+                <label for="tokens-slider" class="form-label">Max Tokens</label>
+                <span class="slider-val" id="tokens-val">256</span>
+              </div>
+              <input type="range" id="tokens-slider" min="32" max="1024" step="32" value="256" class="glass-slider">
+            </div>
+
+            <!-- Streaming Toggle -->
+            <div class="form-group toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-name">Stream Response (SSE)</span>
+                <span class="toggle-desc">Simulate live typewriter output via SSE</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="stream-toggle" checked>
+                <span class="slider round"></span>
+              </label>
+            </div>
+
+            <!-- Custom Bearer Token Box (revealed when custom selected) -->
+            <div class="form-group hidden" id="custom-key-box">
+              <label for="custom-key-input" class="form-label">Custom Bearer Token</label>
+              <input type="password" id="custom-key-input" class="glass-input" placeholder="Bearer sk-...">
+            </div>
+
+            <!-- Dispatch Action -->
+            <div class="sidebar-footer">
+              <button id="btn-dispatch" class="btn btn-primary btn-block">
+                <span class="btn-spinner hidden" id="dispatch-spinner"></span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                <span id="dispatch-btn-text">Execute Gateway Proxy</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Column: Interactive Console & Execution Telemetry -->
+          <div class="playground-console glass-panel">
+            <div class="panel-header console-header">
+              <div class="console-title-wrap">
+                <h2 class="panel-title">Interactive Terminal & Live Output</h2>
+                <span class="route-tracker-pill" id="route-tracker-pill">
+                  <span class="indicator-dot"></span>
+                  <span id="route-tracker-text">Route: Ready</span>
+                </span>
+              </div>
+              <div class="console-actions">
+                <button id="btn-clear-console" class="btn btn-ghost btn-xs" title="Clear Chat History">Clear</button>
+                <button id="btn-copy-response" class="btn btn-ghost btn-xs" title="Copy Output to Clipboard">Copy</button>
+                <button id="btn-view-raw-json" class="btn btn-outline btn-xs" title="Inspect Raw JSON Payload">JSON</button>
+              </div>
+            </div>
+
+            <!-- Micro Pipeline Flow Stepper (Visualizes each hop of the gateway) -->
+            <div class="pipeline-stepper" id="pipeline-stepper">
+              <div class="step-item" id="step-auth">
+                <span class="step-icon">1</span>
+                <span class="step-label">Bearer Auth</span>
+              </div>
+              <div class="step-arrow">➔</div>
+              <div class="step-item" id="step-budget">
+                <span class="step-icon">2</span>
+                <span class="step-label">Budget Check</span>
+              </div>
+              <div class="step-arrow">➔</div>
+              <div class="step-item" id="step-tpm">
+                <span class="step-icon">3</span>
+                <span class="step-label">Token Bucket</span>
+              </div>
+              <div class="step-arrow">➔</div>
+              <div class="step-item" id="step-router">
+                <span class="step-icon">4</span>
+                <span class="step-label">Smart Router</span>
+              </div>
+              <div class="step-arrow">➔</div>
+              <div class="step-item" id="step-log">
+                <span class="step-icon">5</span>
+                <span class="step-label">SQLite Audit</span>
+              </div>
+            </div>
+
+            <!-- Telemetry Metrics Banner (appears after execution) -->
+            <div class="telemetry-banner" id="telemetry-banner">
+              <div class="telem-item">
+                <span class="telem-label">STATUS</span>
+                <span class="telem-value" id="telem-status">--</span>
+              </div>
+              <div class="telem-item">
+                <span class="telem-label">PROVIDER & MODEL</span>
+                <span class="telem-value" id="telem-model">--</span>
+              </div>
+              <div class="telem-item">
+                <span class="telem-label">LATENCY</span>
+                <span class="telem-value highlight-latency" id="telem-latency">-- ms</span>
+              </div>
+              <div class="telem-item">
+                <span class="telem-label">TOKENS</span>
+                <span class="telem-value" id="telem-tokens">--</span>
+              </div>
+              <div class="telem-item">
+                <span class="telem-label">COMPUTED COST</span>
+                <span class="telem-value highlight-cost" id="telem-cost">$0.000000</span>
+              </div>
+            </div>
+
+            <!-- Terminal Output Stream Box -->
+            <div class="terminal-body" id="terminal-body">
+              <!-- Welcome banner in console -->
+              <div class="terminal-welcome">
+                <div class="welcome-icon">⚡</div>
+                <h3>Welcome to NEXUS LLM Gateway</h3>
+                <p>Submit a prompt or select a preset on the left. The gateway will authenticate your request, enforce team TPM rate limits and budgets, route to Groq LPU, and seamlessly failover if an upstream outage occurs.</p>
+                <div class="feature-tags">
+                  <span class="ftag">Sub-500ms Routing</span>
+                  <span class="ftag">Instant Auto-Failover</span>
+                  <span class="ftag">Redis & In-Memory Fallback</span>
+                  <span class="ftag">Audited SQLite DB</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Prompt Input Box -->
+            <div class="terminal-footer">
+              <div class="prompt-box">
+                <textarea id="prompt-input" rows="2" class="glass-textarea" placeholder="Enter your prompt here... (e.g. 'Explain why companies use an LLM gateway in 2 sentences')"></textarea>
+                <button id="btn-send-inline" class="btn btn-primary btn-circle" title="Send (Ctrl+Enter)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+              </div>
+              <div class="prompt-hints">
+                <span>Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to submit</span>
+                <span id="char-count">0 characters</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =============================================================== -->
+      <!-- TAB 2: ROUTING TOPOLOGY & FAILOVER FLOW -->
+      <!-- =============================================================== -->
+      <section id="tab-topology" class="tab-panel">
+        <div class="topology-wrapper glass-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Dynamic Routing Topology & Automated Failover Architecture</h2>
+              <p class="panel-desc">Visual representation of request lifecycle through authentication, rate limiting, and dual-tier provider fallback.</p>
+            </div>
+            <div class="topology-controls">
+              <button id="btn-sim-normal" class="btn btn-outline btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Simulate Normal Flow
+              </button>
+              <button id="btn-sim-failover" class="btn btn-amber btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Simulate Primary Outage & Failover
+              </button>
+            </div>
+          </div>
+
+          <!-- SVG Visual Diagram -->
+          <div class="topology-canvas-container">
+            <div class="topology-canvas" id="topology-canvas">
+              <!-- Node 1: Client Application -->
+              <div class="topo-node" id="node-client" style="left: 4%; top: 40%;">
+                <div class="node-icon icon-client">📱</div>
+                <div class="node-content">
+                  <div class="node-title">Client Application</div>
+                  <div class="node-sub">OpenAI SDK / cURL</div>
+                  <span class="node-status-tag tag-ready">Ready</span>
+                </div>
+              </div>
+
+              <!-- Node 2: Gateway Auth & Ingestion -->
+              <div class="topo-node" id="node-auth" style="left: 21%; top: 40%;">
+                <div class="node-icon icon-auth">🔑</div>
+                <div class="node-content">
+                  <div class="node-title">Nexus Gateway Auth</div>
+                  <div class="node-sub">Bearer Token Validation</div>
+                  <span class="node-status-tag tag-ready">Enforced</span>
+                </div>
+              </div>
+
+              <!-- Node 3: Rate Limiter & Budget Engine -->
+              <div class="topo-node" id="node-limiter" style="left: 39%; top: 40%;">
+                <div class="node-icon icon-limiter">🛡️</div>
+                <div class="node-content">
+                  <div class="node-title">Rate Limiter & Budget</div>
+                  <div class="node-sub">Redis / Dual Engine</div>
+                  <span class="node-status-tag tag-ready" id="limiter-status-tag">Active</span>
+                </div>
+              </div>
+
+              <!-- Node 4: Intelligent Router -->
+              <div class="topo-node" id="node-router" style="left: 57%; top: 40%;">
+                <div class="node-icon icon-router">🔀</div>
+                <div class="node-content">
+                  <div class="node-title">Smart Fallback Router</div>
+                  <div class="node-sub">Dynamic Provider Dispatch</div>
+                  <span class="node-status-tag tag-ready">Routing</span>
+                </div>
+              </div>
+
+              <!-- Node 5A: Primary Provider (Groq LPU) -->
+              <div class="topo-node topo-node-provider" id="node-groq" style="left: 77%; top: 18%;">
+                <div class="node-icon icon-primary">⚡</div>
+                <div class="node-content">
+                  <div class="node-title">Primary: Groq LPU</div>
+                  <div class="node-sub">openai/gpt-oss-20b</div>
+                  <span class="node-status-tag tag-primary" id="groq-node-tag">Active (Fast)</span>
+                </div>
+              </div>
+
+              <!-- Node 5B: Secondary Provider (OpenRouter Failover) -->
+              <div class="topo-node topo-node-provider" id="node-openrouter" style="left: 77%; top: 62%;">
+                <div class="node-icon icon-secondary">🔄</div>
+                <div class="node-content">
+                  <div class="node-title">Failover: OpenRouter / Secondary</div>
+                  <div class="node-sub">Auto-Recovery Layer</div>
+                  <span class="node-status-tag tag-secondary" id="openrouter-node-tag">Standby</span>
+                </div>
+              </div>
+
+              <!-- SVG Animated Connecting Wires -->
+              <svg class="topo-svg-wires" width="100%" height="100%">
+                <defs>
+                  <linearGradient id="wireGradientNormal" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#06b6d4"/>
+                    <stop offset="100%" stop-color="#10b981"/>
+                  </linearGradient>
+                  <linearGradient id="wireGradientFailover" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#f59e0b"/>
+                    <stop offset="100%" stop-color="#ef4444"/>
+                  </linearGradient>
+                </defs>
+
+                <!-- Wire: Client -> Auth -->
+                <path id="wire-client-auth" class="wire-path" d="M 160 200 L 220 200"/>
+                <!-- Wire: Auth -> Limiter -->
+                <path id="wire-auth-limiter" class="wire-path" d="M 330 200 L 400 200"/>
+                <!-- Wire: Limiter -> Router -->
+                <path id="wire-limiter-router" class="wire-path" d="M 520 200 L 590 200"/>
+                <!-- Wire: Router -> Groq (Primary) -->
+                <path id="wire-router-groq" class="wire-path" d="M 700 185 C 740 185, 750 110, 800 110"/>
+                <!-- Wire: Router -> OpenRouter (Fallback) -->
+                <path id="wire-router-openrouter" class="wire-path" d="M 700 215 C 740 215, 750 290, 800 290"/>
+
+                <!-- Animated moving packet pulse element -->
+                <circle id="anim-packet" class="anim-packet hidden" r="6" cx="0" cy="0" fill="#22d3ee" filter="drop-shadow(0 0 8px #06b6d4)"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Architecture Highlight Cards -->
+          <div class="architecture-specs-grid">
+            <div class="spec-card">
+              <div class="spec-header">
+                <span class="spec-num">01</span>
+                <h4>High-Availability Fallback</h4>
+              </div>
+              <p>If the primary upstream LPU encounters rate limits (429), timeouts, or 5xx outages, the gateway intercepts the failure and re-routes to a fallback model within milliseconds with zero client-side crash.</p>
+            </div>
+            <div class="spec-card">
+              <div class="spec-header">
+                <span class="spec-num">02</span>
+                <h4>Multi-Tenant Token Buckets</h4>
+              </div>
+              <p>Each team key has independent Tokens Per Minute (TPM) enforcement backed by Redis sliding window counters, with instantaneous in-memory fallback if Redis is unavailable.</p>
+            </div>
+            <div class="spec-card">
+              <div class="spec-header">
+                <span class="spec-num">03</span>
+                <h4>Dollar Budget Caps</h4>
+              </div>
+              <p>Enforces strict financial guardrails per client. When cumulative spend reaches the team threshold, requests are rejected with HTTP 403 Forbidden before costly tokens are consumed.</p>
+            </div>
+            <div class="spec-card">
+              <div class="spec-header">
+                <span class="spec-num">04</span>
+                <h4>Comprehensive Audit Trail</h4>
+              </div>
+              <p>Every single transaction records model name, team ID, token usage, latency (ms), dollar cost, and resolution status to SQLite for auditability and compliance.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =============================================================== -->
+      <!-- TAB 3: TELEMETRY & ANALYTICS -->
+      <!-- =============================================================== -->
+      <section id="tab-telemetry" class="tab-panel">
+        <div class="telemetry-dashboard">
+          <!-- Top KPI Stat Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card glass-panel">
+              <div class="kpi-meta">
+                <span class="kpi-label">Total Requests</span>
+                <span class="kpi-icon icon-blue">📊</span>
+              </div>
+              <div class="kpi-value" id="kpi-total-requests">0</div>
+              <div class="kpi-sub">Lifetime processed calls</div>
+            </div>
+
+            <div class="kpi-card glass-panel">
+              <div class="kpi-meta">
+                <span class="kpi-label">Effective Success Rate</span>
+                <span class="kpi-icon icon-green">🟢</span>
+              </div>
+              <div class="kpi-value highlight-green" id="kpi-success-rate">100%</div>
+              <div class="kpi-sub" id="kpi-success-breakdown">0 direct + 0 fallbacks</div>
+            </div>
+
+            <div class="kpi-card glass-panel">
+              <div class="kpi-meta">
+                <span class="kpi-label">Failovers Recovered</span>
+                <span class="kpi-icon icon-amber">🛡️</span>
+              </div>
+              <div class="kpi-value highlight-amber" id="kpi-fallback-count">0</div>
+              <div class="kpi-sub">Outages healed silently</div>
+            </div>
+
+            <div class="kpi-card glass-panel">
+              <div class="kpi-meta">
+                <span class="kpi-label">Average Latency</span>
+                <span class="kpi-icon icon-purple">⚡</span>
+              </div>
+              <div class="kpi-value highlight-purple" id="kpi-avg-latency">0.00s</div>
+              <div class="kpi-sub">End-to-end roundtrip</div>
+            </div>
+
+            <div class="kpi-card glass-panel">
+              <div class="kpi-meta">
+                <span class="kpi-label">Total Tokens</span>
+                <span class="kpi-icon icon-cyan">🔢</span>
+              </div>
+              <div class="kpi-value highlight-cyan" id="kpi-total-tokens">0</div>
+              <div class="kpi-sub">Prompt + Completion</div>
+            </div>
+
+            <div class="kpi-card glass-panel">
+              <div class="kpi-meta">
+                <span class="kpi-label">Cumulative Spend</span>
+                <span class="kpi-icon icon-gold">💰</span>
+              </div>
+              <div class="kpi-value highlight-gold" id="kpi-total-cost">$0.000000</div>
+              <div class="kpi-sub">Tracked by Budget Engine</div>
+            </div>
+          </div>
+
+          <!-- Charts Row -->
+          <div class="charts-row">
+            <!-- Left Chart: Latency Trend of Recent Calls -->
+            <div class="chart-container glass-panel">
+              <div class="panel-header">
+                <h3 class="panel-title">Recent Request Latency Trend (Seconds)</h3>
+                <span class="badge badge-info">Real-time Stream</span>
+              </div>
+              <div class="bar-chart-visual" id="latency-bars-container">
+                <!-- Dynamically rendered bars -->
+                <div class="chart-placeholder">Waiting for telemetry data...</div>
+              </div>
+            </div>
+
+            <!-- Right Chart: Model Distribution -->
+            <div class="chart-container glass-panel">
+              <div class="panel-header">
+                <h3 class="panel-title">Model Traffic & Routing Share</h3>
+                <span class="badge badge-info">By Provider</span>
+              </div>
+              <div class="model-distribution-list" id="model-distribution-list">
+                <!-- Dynamically populated model items -->
+                <div class="chart-placeholder">Loading model telemetry...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status Breakdown Row -->
+          <div class="summary-breakdown glass-panel">
+            <div class="panel-header">
+              <h3 class="panel-title">System Resolution Distribution</h3>
+              <span class="badge badge-success">High Resilience</span>
+            </div>
+            <div class="breakdown-meter-wrap">
+              <div class="breakdown-bar">
+                <div class="bar-segment seg-success" id="bar-seg-success" style="width: 70%;" title="Direct Success"></div>
+                <div class="bar-segment seg-fallback" id="bar-seg-fallback" style="width: 25%;" title="Fallback Recovered"></div>
+                <div class="bar-segment seg-failed" id="bar-seg-failed" style="width: 5%;" title="Failed"></div>
+              </div>
+              <div class="breakdown-legend">
+                <div class="legend-item"><span class="legend-dot dot-success"></span> <span id="leg-success-txt">Direct Success (70%)</span></div>
+                <div class="legend-item"><span class="legend-dot dot-fallback"></span> <span id="leg-fallback-txt">Fallback Recovered (25%)</span></div>
+                <div class="legend-item"><span class="legend-dot dot-failed"></span> <span id="leg-failed-txt">Total Failures (5%)</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =============================================================== -->
+      <!-- TAB 4: AUDIT LOGS & TRACES -->
+      <!-- =============================================================== -->
+      <section id="tab-logs" class="tab-panel">
+        <div class="logs-wrapper glass-panel">
+          <div class="panel-header logs-header">
+            <div>
+              <h2 class="panel-title">SQLite Audit Log & Trace Inspector</h2>
+              <p class="panel-desc">Real-time persistent audit records from <code>gateway_logs.db</code>.</p>
+            </div>
+            <div class="logs-toolbar">
+              <!-- Search Input -->
+              <div class="search-wrap">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="log-search-input" class="glass-input-sm" placeholder="Search model, team, id...">
+              </div>
+
+              <!-- Filter by Team -->
+              <select id="log-team-filter" class="glass-select-sm">
+                <option value="all">All Teams</option>
+                <option value="team-alpha">Team Alpha</option>
+                <option value="team-beta">Team Beta</option>
+              </select>
+
+              <!-- Filter by Status -->
+              <select id="log-status-filter" class="glass-select-sm">
+                <option value="all">All Statuses</option>
+                <option value="success">Success</option>
+                <option value="fallback_success">Fallback Recovered</option>
+                <option value="total_failure">Total Failure</option>
+              </select>
+
+              <button id="btn-clear-db" class="btn btn-outline-danger btn-sm" title="Clear all audit logs from SQLite database">
+                Clear DB
+              </button>
+            </div>
+          </div>
+
+          <!-- Logs Table -->
+          <div class="table-container">
+            <table class="gateway-table" id="logs-table">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">ID</th>
+                  <th style="width: 150px;">Timestamp</th>
+                  <th style="width: 120px;">Team ID</th>
+                  <th>Model / Fallback Route</th>
+                  <th style="width: 90px; text-align: right;">Tokens</th>
+                  <th style="width: 110px; text-align: right;">Cost ($)</th>
+                  <th style="width: 90px; text-align: right;">Latency</th>
+                  <th style="width: 140px; text-align: center;">Status</th>
+                  <th style="width: 80px; text-align: center;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="logs-table-body">
+                <!-- Dynamically populated rows -->
+                <tr>
+                  <td colspan="9" class="td-empty">Loading audit records from database...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- =============================================================== -->
+      <!-- TAB 5: QUOTAS & RATE LIMITER -->
+      <!-- =============================================================== -->
+      <section id="tab-quotas" class="tab-panel">
+        <div class="quotas-wrapper">
+          <div class="quotas-header glass-panel">
+            <h2 class="panel-title">Multi-Tenant Quotas & Policy Enforcement Engine</h2>
+            <p class="panel-desc">Hardware-enforced Token Bucket rate limiting and cumulative financial budget guards.</p>
+          </div>
+
+          <div class="teams-quota-grid" id="teams-quota-grid">
+            <!-- Team Alpha Card -->
+            <div class="team-quota-card glass-panel" id="card-team-alpha">
+              <div class="team-card-head">
+                <div class="team-badge-wrap">
+                  <span class="team-avatar avatar-alpha">α</span>
+                  <div>
+                    <h3 class="team-card-title">Team Alpha</h3>
+                    <span class="badge badge-warning">Strict Demo Tier</span>
+                  </div>
+                </div>
+                <div class="team-key-chip">
+                  <code>team-alpha-key</code>
+                </div>
+              </div>
+
+              <!-- Quota Meters -->
+              <div class="meter-group">
+                <div class="meter-info">
+                  <span class="meter-name">Rate Limit (TPM)</span>
+                  <span class="meter-vals" id="alpha-tpm-vals">0 / 150 TPM</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill fill-amber" id="alpha-tpm-bar" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <div class="meter-group">
+                <div class="meter-info">
+                  <span class="meter-name">Cumulative Budget</span>
+                  <span class="meter-vals" id="alpha-budget-vals">$0.00 / $1.00</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill fill-green" id="alpha-budget-bar" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <!-- Stress Test Trigger Button -->
+              <div class="team-actions">
+                <button class="btn btn-warning btn-block btn-trigger-429" data-team="team-alpha-key">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  Spam Burst (Trigger HTTP 429 Rate Limit)
+                </button>
+              </div>
+            </div>
+
+            <!-- Team Beta Card -->
+            <div class="team-quota-card glass-panel" id="card-team-beta">
+              <div class="team-card-head">
+                <div class="team-badge-wrap">
+                  <span class="team-avatar avatar-beta">β</span>
+                  <div>
+                    <h3 class="team-card-title">Team Beta</h3>
+                    <span class="badge badge-prod">Enterprise Tier</span>
+                  </div>
+                </div>
+                <div class="team-key-chip">
+                  <code>team-beta-key</code>
+                </div>
+              </div>
+
+              <!-- Quota Meters -->
+              <div class="meter-group">
+                <div class="meter-info">
+                  <span class="meter-name">Rate Limit (TPM)</span>
+                  <span class="meter-vals" id="beta-tpm-vals">0 / 50,000 TPM</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill fill-cyan" id="beta-tpm-bar" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <div class="meter-group">
+                <div class="meter-info">
+                  <span class="meter-name">Cumulative Budget</span>
+                  <span class="meter-vals" id="beta-budget-vals">$0.00 / $50.00</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill fill-green" id="beta-budget-bar" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <!-- Enterprise Fire Button -->
+              <div class="team-actions">
+                <button class="btn btn-outline btn-block btn-trigger-beta" data-team="team-beta-key">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  Test Enterprise High-Throughput Call
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rate Limiter Engine Explanation -->
+          <div class="engine-explainer glass-panel">
+            <div class="explainer-head">
+              <div class="engine-status-badge">
+                <span class="pulse-dot"></span>
+                <span id="engine-mode-text">Active Dual-Engine: Redis + In-Memory Fallback</span>
+              </div>
+            </div>
+            <p>The rate limiter monitors tokens requested per minute using an atomic sliding window. If a tenant exceeds their quota, the gateway immediately returns an <strong>HTTP 429 Too Many Requests</strong> response with a standard <code>Retry-After</code> HTTP header specifying the exact remaining seconds until cooldown.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- =============================================================== -->
+      <!-- TAB 6: API INTEGRATION & CURL STUDIO -->
+      <!-- =============================================================== -->
+      <section id="tab-integration" class="tab-panel">
+        <div class="integration-wrapper glass-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Drop-In OpenAI SDK & cURL Integration</h2>
+              <p class="panel-desc">Nexus Gateway implements the standard OpenAI Chat Completions API specification (<code>/v1/chat/completions</code>). Existing apps require zero code changes beyond updating <code>base_url</code>.</p>
+            </div>
+          </div>
+
+          <div class="code-studio-tabs">
+            <button class="code-tab active" data-code="python">Python (openai SDK)</button>
+            <button class="code-tab" data-code="curl">cURL Command</button>
+            <button class="code-tab" data-code="nodejs">Node.js (OpenAI)</button>
+          </div>
+
+          <!-- Code Viewers -->
+          <div class="code-block-wrap">
+            <button class="btn-copy-code" id="btn-copy-code" title="Copy code snippet">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+            
+            <pre class="code-pre"><code id="code-display" class="language-python"># Python OpenAI SDK Drop-In Replacement
+from openai import OpenAI
+
+# Connect directly to your Nexus Gateway proxy
+client = OpenAI(
+    base_url="http://localhost:8000/v1",
+    api_key="team-alpha-key"  # Or team-beta-key
+)
+
+response = client.chat.completions.create(
+    model="openai/gpt-oss-20b",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "What are the benefits of an LLM API Gateway?"}
+    ],
+    temperature=0.7,
+    max_tokens=256
+)
+
+print(response.choices[0].message.content)
+</code></pre>
+          </div>
+
+          <!-- Feature comparison table -->
+          <div class="features-table-wrap">
+            <h3 class="sub-title">Why an Enterprise LLM Gateway Matters</h3>
+            <table class="gateway-table">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>Direct Provider API</th>
+                  <th>Nexus LLM Gateway</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Reliability & Uptime</strong></td>
+                  <td>❌ Hard failures when provider is down</td>
+                  <td><span class="badge badge-success">✓ Instant Auto-Failover to secondary</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Cost & Budget Controls</strong></td>
+                  <td>❌ Unexpected bill shocks</td>
+                  <td><span class="badge badge-success">✓ Dollar budget caps & spend audit</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Rate Limiting</strong></td>
+                  <td>❌ Provider-wide global caps</td>
+                  <td><span class="badge badge-success">✓ Fine-grained per-team Token Bucket (TPM)</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Observability</strong></td>
+                  <td>❌ Disjointed dashboards</td>
+                  <td><span class="badge badge-success">✓ Unified SQLite audit logs & latency telemetry</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Trace Details Modal -->
+  <div class="modal-overlay hidden" id="trace-modal">
+    <div class="modal-box glass-panel">
+      <div class="modal-header">
+        <h3 class="modal-title" id="trace-modal-title">Request Trace Inspector</h3>
+        <button class="modal-close" id="btn-close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <pre class="raw-json-view"><code id="trace-json-content"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline btn-sm" id="btn-modal-copy">Copy JSON</button>
+        <button class="btn btn-primary btn-sm" id="btn-modal-done">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification System -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Frontend Logic -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
