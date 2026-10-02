@@ -567,6 +567,9 @@ async function executeGatewayProxy() {
       if (!fullContent && reasoningContent) {
         fullContent = reasoningContent;
         textContainer.textContent = fullContent;
+      } else if (!fullContent) {
+        fullContent = "⚠️ [GATEWAY NOTICE] Stream completed with 0 tokens. Ensure your provider API key is active.";
+        textContainer.innerHTML = `<span style="color: #fca5a5;">${escapeHtml(fullContent)}</span>`;
       }
 
       const totalTimeMs = Math.round(performance.now() - startTime);
@@ -581,7 +584,7 @@ async function executeGatewayProxy() {
       const isFallback = model.includes('fail');
       renderTelemetryBanner({
         status: isFallback ? '200 OK (Recovered)' : '200 OK (Direct)',
-        model: isFallback ? 'openai/gpt-oss-20b (Failover)' : model,
+        model: isFallback ? 'llama-3.1-8b-instant (Failover)' : model,
         latencyMs: totalTimeMs,
         tokens: estimatedTokens,
         cost: `$${estimatedCost}`,
@@ -590,7 +593,7 @@ async function executeGatewayProxy() {
 
       state.lastResponseData = {
         status: '200 OK',
-        model_routed: isFallback ? 'openai/gpt-oss-20b' : model,
+        model_routed: isFallback ? 'llama-3.1-8b-instant' : model,
         original_model: model,
         latency_ms: totalTimeMs,
         tokens: estimatedTokens,

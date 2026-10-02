@@ -1,3 +1,4 @@
+import json
 import httpx
 from typing import AsyncGenerator, Union
 from app.services.providers.base import LLMProvider
@@ -35,6 +36,12 @@ class GroqProvider(LLMProvider):
 
         async with httpx.AsyncClient() as client:
             async with client.stream("POST", self.base_url, headers=headers, json=payload, timeout=60.0) as response:
-                response.raise_for_status()
+                if response.status_code != 200:
+                    err_bytes = await response.aread()
+                    err_msg = err_bytes.decode('utf-8', errors='ignore')
+                    err_payload = json.dumps({"choices": [{"delta": {"content": f"⚠️ [Groq Error {response.status_code}]: {err_msg}"}}]})
+                    yield f"data: {err_payload}\n\n".encode("utf-8")
+                    yield b"data: [DONE]\n\n"
+                    return
                 async for chunk in response.aiter_bytes():
                     yield chunk

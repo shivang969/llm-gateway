@@ -1,3 +1,4 @@
+import json
 import httpx
 from typing import AsyncGenerator, Union
 from app.services.providers.base import LLMProvider
@@ -36,6 +37,9 @@ class OpenRouterProvider(LLMProvider):
 
         async with httpx.AsyncClient() as client:
             async with client.stream("POST", self.base_url, headers=headers, json=payload, timeout=60.0) as response:
-                response.raise_for_status()
+                if response.status_code != 200:
+                    err_bytes = await response.aread()
+                    err_msg = err_bytes.decode('utf-8', errors='ignore')
+                    raise Exception(f"OpenRouter HTTP {response.status_code}: {err_msg}")
                 async for chunk in response.aiter_bytes():
                     yield chunk
