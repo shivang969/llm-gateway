@@ -2,6 +2,8 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Production%20Ready-emerald?style=for-the-badge&logo=fastapi&logoColor=white" alt="Status" />
+  <img src="https://img.shields.io/badge/Deploy-Render-46E3B7?style=for-the-badge&logo=render&logoColor=black" alt="Render" />
+  <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
   <img src="https://img.shields.io/badge/Python-3.10%20|%203.11%20|%203.12%20|%203.13-blue?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/FastAPI-ASGI%20High%20Perf-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
   <img src="https://img.shields.io/badge/OpenAI-API%20v1%20Drop--In-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI Compatible" />
@@ -17,6 +19,7 @@
 - [Core Features](#-core-features)
 - [Interactive Control Plane](#-interactive-control-plane)
 - [Directory Structure](#-directory-structure)
+- [Cloud Deployment (Render & Docker)](#-cloud-deployment-render--docker)
 - [Quick Start Guide](#-quick-start-guide)
 - [Environment Configuration](#-environment-configuration)
 - [API Reference](#-api-reference)
@@ -170,11 +173,29 @@ llm-gateway/
 ├── config/
 │   └── gateway_policies.yml       # Declarative policy definitions
 ├── tests/                         # Automated test suite
-├── DEMO_GUIDE.md                  # 5-minute technical presentation & interview script
+├── DEPLOYMENT_GUIDE.md            # Complete online cloud deployment walkthrough
+├── render.yaml                    # Render Blueprint Infrastructure-as-Code
+├── Dockerfile                     # Multi-stage production container
+├── Procfile                       # ASGI Web process definition
 ├── gateway_logs.db                # SQLite audit trace database
 ├── start_demo.sh                  # 1-click startup automation script
 └── README.md                      # Project documentation
 ```
+
+---
+
+## 🌐 Cloud Deployment (Render & Docker)
+
+NEXUS LLM Gateway is pre-configured for **zero-friction online deployment** to [Render](https://render.com), [Railway](https://railway.app), or any container platform.
+
+### Deploy to Render in 3 Minutes:
+1. Push your repository to GitHub (`shivang969/llm-gateway`).
+2. Go to [dashboard.render.com](https://dashboard.render.com) -> **New +** -> **Blueprint**.
+3. Select your repository. Render automatically reads [`render.yaml`](./render.yaml).
+4. Enter your `GROQ_API_KEY` (and optional `OPENROUTER_API_KEY` / `REDIS_URL`) and click **Apply**.
+5. Your gateway and cybernetic dashboard will be live with free automatic SSL (`https://<service-name>.onrender.com`).
+
+👉 **Read the full [Deployment Guide (DEPLOYMENT_GUIDE.md)](./DEPLOYMENT_GUIDE.md)** for step-by-step instructions, Docker instructions, and production verification commands.
 
 ---
 

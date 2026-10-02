@@ -15,7 +15,7 @@ from app.middleware.rate_limit import RateLimiter
 from app.services.logger import log_request, get_recent_logs, get_stats, seed_demo_logs, clear_logs
 
 router = APIRouter()
-rate_limiter = RateLimiter()
+rate_limiter = RateLimiter(redis_url=os.getenv("REDIS_URL", "redis://localhost:6379"))
 security = HTTPBearer(auto_error=False)
 
 TEAMS_CONFIG = {

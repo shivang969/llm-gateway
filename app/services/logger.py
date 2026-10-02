@@ -1,8 +1,11 @@
+import os
 import sqlite3
 import random
+from pathlib import Path
 from datetime import datetime, timedelta
 
-DB_PATH = "gateway_logs.db"
+DB_PATH = os.getenv("DATABASE_PATH", "gateway_logs.db")
+Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
 
 def init_db():
     """Creates the SQLite table if it doesn't already exist."""

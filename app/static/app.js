@@ -1055,6 +1055,10 @@ function updateCodeSnippets(lang = 'python') {
   const teamKey = state.activeTeamKey;
   const model = state.selectedModel;
 
+  const baseUrl = (typeof window !== 'undefined' && window.location && window.location.origin) 
+    ? `${window.location.origin}/v1` 
+    : 'http://localhost:8000/v1';
+
   let snippet = '';
 
   if (activeLang === 'python') {
@@ -1063,7 +1067,7 @@ from openai import OpenAI
 
 # Connect directly to your Nexus Gateway proxy
 client = OpenAI(
-    base_url="http://localhost:8000/v1",
+    base_url="${baseUrl}",
     api_key="${teamKey}"  # Authenticates tenant quotas
 )
 
@@ -1080,7 +1084,7 @@ response = client.chat.completions.create(
 print(response.choices[0].message.content)`;
   } else if (activeLang === 'curl') {
     snippet = `# cURL Terminal Command
-curl -X POST http://localhost:8000/v1/chat/completions \\
+curl -X POST ${baseUrl}/chat/completions \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer ${teamKey}" \\
   -d '{
@@ -1096,7 +1100,7 @@ curl -X POST http://localhost:8000/v1/chat/completions \\
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-  baseURL: "http://localhost:8000/v1",
+  baseURL: "${baseUrl}",
   apiKey: "${teamKey}",
 });
 
