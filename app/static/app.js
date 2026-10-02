@@ -514,35 +514,59 @@ async function executeGatewayProxy() {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
+      let streamBuffer = '';
       let fullContent = '';
+      let reasoningContent = '';
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
+        streamBuffer += decoder.decode(value, { stream: true });
+        const lines = streamBuffer.split('\n');
+        // Keep incomplete trailing line fragment in buffer
+        streamBuffer = lines.pop();
 
         for (const line of lines) {
           const trimmed = line.trim();
+          if (!trimmed) continue;
+
           if (trimmed.startsWith('data:')) {
-            const dataStr = trimmed.replace('data:', '').trim();
+            const dataStr = trimmed.slice(5).trim();
             if (dataStr === '[DONE]') continue;
             try {
               const parsed = JSON.parse(dataStr);
-              const delta = parsed.choices?.[0]?.delta?.content || '';
-              fullContent += delta;
-              textContainer.textContent = fullContent;
+              const delta = parsed.choices?.[0]?.delta;
+              if (!delta) continue;
+
+              const contentToken = delta.content || delta.text || '';
+              const reasoningToken = delta.reasoning || delta.reasoning_content || '';
+
+              if (contentToken) {
+                fullContent += contentToken;
+              } else if (reasoningToken) {
+                reasoningContent += reasoningToken;
+              }
+
+              // Update terminal bubble with clean formatted content
+              if (reasoningContent && !fullContent) {
+                textContainer.innerHTML = `<span style="opacity: 0.75; font-style: italic; color: #a5b4fc;">💭 Thinking: ${escapeHtml(reasoningContent)}</span>`;
+              } else if (reasoningContent && fullContent) {
+                textContainer.innerHTML = `<details style="margin-bottom: 8px; font-size: 0.85em; opacity: 0.8;"><summary style="cursor: pointer; user-select: none; color: #a5b4fc;">💭 Thought Process (${reasoningContent.length} chars)</summary><div style="padding: 6px 10px; background: rgba(0,0,0,0.3); border-radius: 6px; margin-top: 4px; font-family: monospace; white-space: pre-wrap; font-size: 0.9em;">${escapeHtml(reasoningContent)}</div></details><div>${escapeHtml(fullContent)}</div>`;
+              } else if (fullContent) {
+                textContainer.textContent = fullContent;
+              }
               DOM.terminalBody.scrollTop = DOM.terminalBody.scrollHeight;
             } catch (e) {
-              // Raw text chunk fallback
-              fullContent += dataStr;
-              textContainer.textContent = fullContent;
+              // Ignore partial JSON chunks - do NOT leak raw JSON strings
             }
-          } else if (trimmed) {
-            fullContent += trimmed;
-            textContainer.textContent = fullContent;
           }
         }
+      }
+
+      // If any reasoning finished and no content was produced, display reasoning as response
+      if (!fullContent && reasoningContent) {
+        fullContent = reasoningContent;
+        textContainer.textContent = fullContent;
       }
 
       const totalTimeMs = Math.round(performance.now() - startTime);

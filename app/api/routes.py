@@ -106,7 +106,7 @@ async def chat_completions(
     else:
         is_simulation = False
 
-    if "openrouter" in request.model.lower() or ":free" in request.model.lower() or "google" in request.model.lower():
+    if "openrouter" in request.model.lower() or ":free" in request.model.lower() or "google" in request.model.lower() or "openai/" in request.model.lower():
         primary_provider = openrouter_provider
         fallback_provider = groq_provider
     else:

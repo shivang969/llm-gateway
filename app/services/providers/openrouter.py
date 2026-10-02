@@ -1,5 +1,5 @@
 import httpx
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Union
 from app.services.providers.base import LLMProvider
 from app.models.schemas import ChatCompletionRequest, ChatCompletionResponse
 
@@ -27,7 +27,7 @@ class OpenRouterProvider(LLMProvider):
             response.raise_for_status()
             return ChatCompletionResponse(**response.json())
 
-    async def stream(self, request: ChatCompletionRequest) -> AsyncGenerator[str, None]:
+    async def stream(self, request: ChatCompletionRequest) -> AsyncGenerator[Union[str, bytes], None]:
         headers = self._get_headers()
         headers["Accept"] = "text/event-stream"
         
@@ -37,8 +37,5 @@ class OpenRouterProvider(LLMProvider):
         async with httpx.AsyncClient() as client:
             async with client.stream("POST", self.base_url, headers=headers, json=payload, timeout=60.0) as response:
                 response.raise_for_status()
-                async for line in response.aiter_lines():
-                    if line:
-                        yield f"{line}\n"
-                    else:
-                        yield "\n"
+                async for chunk in response.aiter_bytes():
+                    yield chunk

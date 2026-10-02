@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Union
 from app.models.schemas import ChatCompletionRequest, ChatCompletionResponse
 
 class LLMProvider(ABC):
@@ -12,6 +12,6 @@ class LLMProvider(ABC):
         pass
 
     @abstractmethod
-    async def stream(self, request: ChatCompletionRequest) -> AsyncGenerator[str, None]:
-        """Yields Server-Sent Events (SSE) string chunks for streaming responses."""
+    async def stream(self, request: ChatCompletionRequest) -> AsyncGenerator[Union[str, bytes], None]:
+        """Yields Server-Sent Events (SSE) string or bytes chunks for streaming responses."""
         pass
